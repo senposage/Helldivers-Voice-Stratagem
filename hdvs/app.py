@@ -3,7 +3,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import pyqtSignal
 
 import speech_recognition as sr
-import keyboard as kb
+from PYinterception import Interception, KeyStroke
 
 import time
 
@@ -19,7 +19,7 @@ class hdvs(QMainWindow):
         self.setWindowTitle("Helldivers Voice Stratagem")
         self.setWindowIcon(QIcon("data/icons/Icon.webp"))
 
-        print("Starting stratagem recogition")
+        print("Starting stratagem recognition")
         print("SpeechRecognition Version: {0}".format(sr.__version__))
 
         self.stratagems = stratagems
@@ -66,19 +66,18 @@ class hdvs(QMainWindow):
         self.sPrint("Executing {0}.".format(stratagem["name"]))
         for key in stratagem["code"]:
             if key == "U":
-                kb.send(config["keys"]["up"])
+                KeyStroke(config["keys"]["up"]).send()
             elif key == "D":
-                kb.send(config["keys"]["down"])
+                KeyStroke(config["keys"]["down"]).send()
             elif key == "L":
-                kb.send(config["keys"]["left"])
+                KeyStroke(config["keys"]["left"]).send()
             elif key == "R":
-                kb.send(config["keys"]["right"])
+                KeyStroke(config["keys"]["right"]).send()
             else:
                 self.sPrint("Warning: '{0}' is not a valid code symbol. Please check stratagem.yml.".format(key))
 
             # Ignore on last?
             time.sleep(config["dialling-speed"])
-
 
     def interpret_stratagem(self, command):
         command = format_command(command)
@@ -104,10 +103,10 @@ class hdvs(QMainWindow):
         with self.mic as source:
             audio = recog.listen(source)
 
-        self.sPrint("Input recieved, converting... ")
+        self.sPrint("Input received, converting... ")
         self.changeStatus.emit(Status.PROCESSING)
         try:
-            command = recog.recognize_sphinx(audio, keyword_entries=self.stratagemopts.keyWords,language=("data/pocketsphinx-data/en-US/acoustic-model", "data/pocketsphinx-data/en-US/language-model.lm.bin", "data/pocketsphinx-data/en-US/pronounciation-dictionary.dict") )
+            command = recog.recognize_sphinx(audio, keyword_entries=self.stratagemopts.keyWords,language=("data/pocketsphinx-data/en-US/acoustic-model", "data/pocketsphinx-data/en-US/language-model.lm.bin", "data/pocketsphinx-data/en-US/pronunciation-dictionary.dict"))
             self.sPrint("Heard: {0}".format(command))
 
             if self.interpret_stratagem(command):
@@ -120,9 +119,9 @@ class hdvs(QMainWindow):
         except sr.UnknownValueError:
             self.sPrint("Could not understand audio.")
         except sr.RequestError as e:
-            self.sPrint("Could not decode, recieved error: {0}".format(e))
+            self.sPrint("Could not decode, received error: {0}".format(e))
 
         self.changeStatus.emit(Status.IDLE)
 
-    def sPrint(self, msg : str):
+    def sPrint(self, msg: str):
         self.statusPrint.emit(msg)
